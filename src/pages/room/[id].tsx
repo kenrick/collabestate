@@ -4,21 +4,18 @@ import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { Bars3CenterLeftIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import classnames from "classnames";
-import { useSession } from "next-auth/react";
-import Image from "next/image"
-import useGravatar from "../../hooks/useGravatar";
+import Link from "next/link";
+import Avatar from "../../components/Avatar";
+import useUser from "../../hooks/useUser";
 
 
 const Room: NextPage = () => {
-  const { data: session } = useSession()
-  const avatarUrl = useGravatar(session?.user?.email ?? "", { defaultImage: "robohash" })
-
+  const { user } = useUser()
   return (
     <>
       <div className="fixed top-0 left-0 h-full w-1/2 bg-white" aria-hidden="true" />
       <div className="fixed top-0 right-0 h-full w-1/2 bg-gray-50" aria-hidden="true" />
       <div className="relative flex min-h-screen flex-col">
-        {/* Navbar */}
         <Disclosure as="nav" className="flex-shrink-0 bg-white border-b ">
           {({ open }) => (
             <>
@@ -71,25 +68,18 @@ const Room: NextPage = () => {
                   <div className="hidden lg:block lg:w-80">
                     <div className="flex items-center justify-end">
                       <div className="flex">
-                        <a
-                          href="#"
-                          className="rounded-md px-3 py-2 text-sm font-medium text-black"
+                        <Link
+                          href="/room"
                         >
-                          Rooms
-                        </a>
+                          <a className="rounded-md px-3 py-2 text-sm font-medium text-black">Rooms</a>
+                        </Link>
                       </div>
                       {/* Profile dropdown */}
                       <Menu as="div" className="relative ml-4 flex-shrink-0">
                         <div>
                           <Menu.Button className="flex rounded-full bg-indigo-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-700">
                             <span className="sr-only">Open user menu</span>
-                            <Image
-                              width={32}
-                              height={32}
-                              className="h-8 w-8 rounded-full"
-                              src={avatarUrl}
-                              alt="Your profile picture"
-                            />
+                            <Avatar className="h-8 w-8 rounded-full" email={user?.email} />
                           </Menu.Button>
                         </div>
                         <Transition
@@ -120,57 +110,14 @@ const Room: NextPage = () => {
                 </div>
               </div>
 
-              <Disclosure.Panel className="lg:hidden">
-                <div className="px-2 pt-2 pb-3">
-                  <Disclosure.Button
-                    as="a"
-                    href="#"
-                    className="block rounded-md bg-indigo-800 px-3 py-2 text-base font-medium text-white"
-                  >
-                    Dashboard
-                  </Disclosure.Button>
-                  <Disclosure.Button
-                    as="a"
-                    href="#"
-                    className="mt-1 block rounded-md px-3 py-2 text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
-                  >
-                    Support
-                  </Disclosure.Button>
-                </div>
-                <div className="border-t border-indigo-800 pt-4 pb-3">
-                  <div className="px-2">
-                    <Disclosure.Button
-                      as="a"
-                      href="#"
-                      className="block rounded-md px-3 py-2 text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
-                    >
-                      Your Profile
-                    </Disclosure.Button>
-                    <Disclosure.Button
-                      as="a"
-                      href="#"
-                      className="mt-1 block rounded-md px-3 py-2 text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
-                    >
-                      Settings
-                    </Disclosure.Button>
-                    <Disclosure.Button
-                      as="a"
-                      href="#"
-                      className="mt-1 block rounded-md px-3 py-2 text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-indigo-100"
-                    >
-                      Sign out
-                    </Disclosure.Button>
-                  </div>
-                </div>
-              </Disclosure.Panel>
             </>
           )}
-        </Disclosure>
+        </Disclosure >
 
         {/* 3 column wrapper */}
-        <div className="mx-auto w-full max-w-7xl flex-grow lg:flex xl:px-8">
+        < div className="mx-auto w-full max-w-7xl flex-grow lg:flex xl:px-8" >
           {/* Left sidebar & main wrapper */}
-          <div className="min-w-0 flex-1 bg-white xl:flex">
+          < div className="min-w-0 flex-1 bg-white xl:flex" >
             <div className="border-b border-gray-200 bg-white xl:w-64 xl:flex-shrink-0 xl:border-b-0 xl:border-r xl:border-gray-200">
               <div className="h-full py-6 pl-4 pr-6 sm:pl-6 lg:pl-8 xl:pl-0">
                 {/* Start left column area */}
@@ -190,7 +137,7 @@ const Room: NextPage = () => {
                 {/* End main area */}
               </div>
             </div>
-          </div>
+          </div >
 
           <div className="bg-gray-50 pr-4 sm:pr-6 lg:flex-shrink-0 lg:border-l lg:border-gray-200 lg:pr-8 xl:pr-0">
             <div className="h-full py-6 pl-6 lg:w-80">
@@ -201,8 +148,8 @@ const Room: NextPage = () => {
               {/* End right column area */}
             </div>
           </div>
-        </div>
-      </div>
+        </div >
+      </div >
     </>
   )
 }
