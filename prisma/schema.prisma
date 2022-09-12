@@ -46,6 +46,8 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
+    rooms         Room[]
+    memberships   Member[]
 }
 
 model VerificationToken {
@@ -54,4 +56,21 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Room {
+    id      String   @id @default(cuid())
+    userId  String
+    user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    members Member[]
+}
+
+model Member {
+    id     String @id @default(cuid())
+    userId String
+    roomId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, roomId])
 }
