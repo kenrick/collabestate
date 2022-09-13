@@ -76,7 +76,10 @@ const Rooms: NextPage = () => {
 
 
         {(rooms ?? []).length === 0 ? <NoRooms /> :
-          <div className="max-w-8xl sm:px-6 lg:px-8">
+          <div className="w-6/12 mx-auto mt-10">
+            <div className="my-5">
+              <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Rooms</h2>
+            </div>
             <div className="overflow-hidden bg-white shadow sm:rounded-md">
               <ul role="list" className="divide-y divide-gray-200">
                 {rooms?.map((room) => (
@@ -86,7 +89,7 @@ const Rooms: NextPage = () => {
                         <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
                           <div className="truncate">
                             <div className="flex text-sm">
-                              <p className="truncate font-medium text-purple-600">{room.id}</p>
+                              <p className="truncate font-medium text-purple-600">{room.name}</p>
                             </div>
                             <div className="mt-2 flex">
                               <div className="flex items-center text-sm text-gray-500">

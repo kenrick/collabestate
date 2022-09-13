@@ -61,6 +61,7 @@ model VerificationToken {
 model Room {
     id          String       @id @default(cuid())
     userId      String
+    name        String
     user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
     memberships Membership[]
     createdAt   DateTime     @default(now())

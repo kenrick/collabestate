@@ -1,12 +1,15 @@
 import { createProtectedRouter } from "./context";
-// import { z } from "zod";
+import { generateSlug } from "random-word-slugs"
 
 export const roomRouter = createProtectedRouter()
   .mutation("create", {
     async resolve({ ctx }) {
       return ctx.prisma.room.create({
         data: {
-          userId: ctx.session.user.id, memberships: {
+
+          userId: ctx.session.user.id,
+          name: generateSlug(3),
+          memberships: {
             create: [
               { userId: ctx.session.user.id }
             ]
