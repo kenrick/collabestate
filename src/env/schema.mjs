@@ -11,7 +11,10 @@ export const serverSchema = z.object({
   NEXTAUTH_SECRET: z.string(),
   NEXTAUTH_URL: z.string().url(),
   EMAIL_SERVER: z.string().url(),
-  EMAIL_FROM: z.string().email()
+  EMAIL_FROM: z.string().email(),
+  API_KEY: z.string(),
+  API_HOST: z.string(),
+  FIXTURES: z.string().optional()
 });
 
 /**

@@ -6,7 +6,6 @@ export const roomRouter = createProtectedRouter()
     async resolve({ ctx }) {
       return ctx.prisma.room.create({
         data: {
-
           userId: ctx.session.user.id,
           name: generateSlug(3),
           memberships: {
@@ -29,7 +28,6 @@ export const roomRouter = createProtectedRouter()
         where: {
           memberships: { some: { userId: ctx.session.user.id } }
         }
-
       })
     },
   });
