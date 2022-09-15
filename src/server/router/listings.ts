@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { fetchListingsForSale, fetchLocation } from "../common/realtor";
+import { fetchListingsForSale, fetchLocation, fetchProperty } from "../common/realtor";
 import { createProtectedRouter } from "./context";
 
 export const listingRouter = createProtectedRouter()
@@ -38,4 +38,12 @@ export const listingRouter = createProtectedRouter()
 
       return { listings: { ...listingResponse, properties: listingResponse.properties.filter(p => p.thumbnail) }, location: location }
     },
+  }).query("byId", {
+    input: z
+      .object({
+        propertyId: z.string()
+      }),
+    async resolve({ input }) {
+      return await fetchProperty(input.propertyId)
+    }
   });

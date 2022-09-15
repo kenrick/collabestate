@@ -1,16 +1,18 @@
 import type { NextPage } from "next";
-import { Fragment, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3CenterLeftIcon, XMarkIcon, HeartIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import classnames from "classnames";
 import Link from "next/link";
-import Avatar from "../../components/Avatar";
-import useUser from "../../hooks/useUser";
-import { trpc } from "../../utils/trpc";
+import useUser from "../../../hooks/useUser";
+import { trpc } from "../../../utils/trpc";
 import { formatDistanceStrict } from "date-fns";
 import { RadioGroup } from '@headlessui/react'
 import classNames from "classnames";
 import { Controller, useForm } from "react-hook-form";
+import Avatar from "../../../components/Avatar";
+import { useRouter } from "next/router";
+import Realtime from "../../../components/Realtime";
 
 type SearchType = "sale" | "rent"
 
@@ -26,6 +28,7 @@ interface FilterValues {
 }
 
 const Room: NextPage = () => {
+  const router = useRouter()
   const { user } = useUser()
   const searchInput = useRef<HTMLInputElement>(null)
   const [searchType, setSearchType] = useState<SearchType>('sale')
@@ -41,7 +44,6 @@ const Room: NextPage = () => {
     prop_type: Array.isArray(filters.prop_type) ? filters.prop_type : [],
     prop_sub_type: Array.isArray(filters.prop_sub_type) ? filters.prop_sub_type : [],
   }], { refetchOnWindowFocus: false, });
-
   return (
     <>
       <div className="fixed top-0 left-0 h-full w-1/2 bg-white" aria-hidden="true" />
@@ -98,7 +100,7 @@ const Room: NextPage = () => {
 
                   <div className="flex lg:hidden">
                     {/* Mobile menu button */}
-                    <Disclosure.Button className="inline-flex items-center justify-center rounded-md bg-indigo-600 p-2 text-indigo-400 hover:bg-indigo-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600">
+                    <Disclosure.Button className="inline-flex items-center justify-center rounded-md bg-purple-600 p-2 text-indigo-400 hover:bg-purple-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600">
                       <span className="sr-only">Open main menu</span>
                       {open ? (
                         <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
@@ -120,7 +122,7 @@ const Room: NextPage = () => {
                       {/* Profile dropdown */}
                       <Menu as="div" className="relative ml-4 flex-shrink-0">
                         <div>
-                          <Menu.Button className="flex rounded-full bg-indigo-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-700">
+                          <Menu.Button className="flex rounded-full bg-purple-300 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-700">
                             <span className="sr-only">Open user menu</span>
                             <Avatar className="h-8 w-8 rounded-full" email={user?.email} />
                           </Menu.Button>
@@ -181,33 +183,35 @@ const Room: NextPage = () => {
                     <div className="grid grid-cols-2 gap-3 mt-5">
                       {data?.listings?.properties?.map(property => {
                         return (
-                          <div key={property.listing_id} className="border h-72 border-gray-300 rounded-lg relative flex flex-col overflow-hidden">
-                            <div style={{ backgroundImage: `url('${property.thumbnail}')` }} className="h-full bg-no-repeat bg-cover">
-                            </div>
-                            <div className="h-full pt-3 px-5 flex flex-col justify-between">
-                              <div className="flex flex-row justify-between">
-                                <p>
-                                  <span className="text-purple-600 font-semibold text-lg">${property.price.toLocaleString("en-US")}</span>
-                                  <span className="text-gray-400 text-xs pl-1 align-middle">{formatDistanceStrict(new Date(property.last_update), new Date(), { addSuffix: true })}</span>
-                                </p>
-                                <div className="w-6 h-6 pt-1"><HeartIcon /></div>
+                          <Link key={property.property_id} href={`/room/${router.query.id}/property/${property.property_id}`}>
+                            <div className="border h-72 border-gray-300 rounded-lg relative flex flex-col overflow-hidden hover:border-purple-500 cursor-pointer">
+                              <div style={{ backgroundImage: `url('${property.thumbnail}')` }} className="h-full bg-no-repeat bg-cover">
                               </div>
+                              <div className="h-full pt-3 px-5 flex flex-col justify-between">
+                                <div className="flex flex-row justify-between">
+                                  <p>
+                                    <span className="text-purple-600 font-semibold text-lg">${property.price.toLocaleString("en-US")}</span>
+                                    <span className="text-gray-400 text-xs pl-1 align-middle">{formatDistanceStrict(new Date(property.last_update), new Date(), { addSuffix: true })}</span>
+                                  </p>
+                                  <div className="w-6 h-6 pt-1"><HeartIcon /></div>
+                                </div>
 
-                              <div className="pt-2">
-                                <p>{property.address.neighborhood_name}</p>
-                                <p className="text-sm text-gray-500">{property.address.line}, {property.address.city}, {property.address.state_code}</p>
-                              </div>
+                                <div className="pt-2">
+                                  <p>{property.address.neighborhood_name}</p>
+                                  <p className="text-sm text-gray-500">{property.address.line}, {property.address.city}, {property.address.state_code}</p>
+                                </div>
 
-                              <div className="pt-3 pb-3 flex flex-row justify-between">
-                                <div className="flex flex-row h-4 text-xs">
-                                  <div className="h-5 w-5 mr-2"><Bed /></div> {property.beds} bd.</div>
-                                <div className="flex flex-row h-4 text-xs">
-                                  <div className="h-5 w-5 mr-2"><Bath /></div> {property.baths} ba.</div>
-                                <div className="flex flex-row h-4 text-xs">
-                                  <div className="h-5 w-5 mr-2"><Size /></div> {property.building_size?.size} {property.building_size?.units}</div>
+                                <div className="pt-3 pb-3 flex flex-row justify-between">
+                                  <div className="flex flex-row h-4 text-xs">
+                                    <div className="h-5 w-5 mr-2"><Bed /></div> {property.beds} bd.</div>
+                                  <div className="flex flex-row h-4 text-xs">
+                                    <div className="h-5 w-5 mr-2"><Bath /></div> {property.baths} ba.</div>
+                                  <div className="flex flex-row h-4 text-xs">
+                                    <div className="h-5 w-5 mr-2"><Size /></div> {property.building_size?.size} {property.building_size?.units}</div>
+                                </div>
                               </div>
                             </div>
-                          </div>)
+                          </Link>)
                       })}
 
                     </div>
@@ -221,7 +225,9 @@ const Room: NextPage = () => {
             <div className="h-full py-6 pl-6 lg:w-80">
               {/* Start right column area */}
               <div className="relative h-full" style={{ minHeight: '16rem' }}>
-                <div className="absolute inset-0 rounded-lg border-2 border-dashed border-gray-200" />
+                {user?.email &&
+                  <Realtime email={user.email} roomId={router.query.id as string} />
+                }
               </div>
               {/* End right column area */}
             </div>
@@ -326,6 +332,7 @@ const FilterForm = ({ onSubmit }: { onSubmit: (values: FilterValues) => void }) 
               value="townhouse"
               type="checkbox"
               className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+              disabled
               {...register('prop_sub_type')}
             />
           </div>
