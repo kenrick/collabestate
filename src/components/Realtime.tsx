@@ -126,7 +126,7 @@ const MessageFromMe = ({ from, children }: { from: string, children: JSX.Element
       <div className="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-2 items-start">
         <div><span className="px-4 py-2 rounded-lg inline-block rounded-bl-none bg-purple-50 border border-purple-500 text-gray-600">{children}</span></div>
       </div>
-      <Avatar email={from} className="w-6 h-6 rounded-full order-1" />
+      <Avatar email={from} className="w-6 h-6 rounded-full order-1 bg-purple-300" />
     </div>
   </div>)
 }
@@ -139,7 +139,7 @@ const MessageFromOther = ({ from, children }: { from: string, children: JSX.Elem
         <div className="flex flex-col space-y-2 text-xs max-w-xs mx-2 order-1 items-end">
           <div><span className="px-4 py-2 rounded-lg inline-block rounded-br-none bg-purple-600 text-white ">{children}</span></div>
         </div>
-        <Avatar email={from} className="w-6 h-6 rounded-full order-2" />
+        <Avatar email={from} className="w-6 h-6 rounded-full order-2 bg-purple-300" />
       </div>
     </div>
   )
