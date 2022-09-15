@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useRef, useState } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3CenterLeftIcon, XMarkIcon, HeartIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { Bars3CenterLeftIcon, XMarkIcon, MagnifyingGlassIcon, ChatBubbleBottomCenterIcon } from '@heroicons/react/24/outline'
 import classnames from "classnames";
 import Link from "next/link";
 import useUser from "../../../hooks/useUser";
@@ -12,7 +12,8 @@ import classNames from "classnames";
 import { Controller, useForm } from "react-hook-form";
 import Avatar from "../../../components/Avatar";
 import { useRouter } from "next/router";
-import Realtime from "../../../components/Realtime";
+import Realtime, { FeedMessage, RealtimeWrapper } from "../../../components/Realtime";
+import { useChannel } from "@ably-labs/react-hooks";
 
 type SearchType = "sale" | "rent"
 
@@ -44,6 +45,11 @@ const Room: NextPage = () => {
     prop_type: Array.isArray(filters.prop_type) ? filters.prop_type : [],
     prop_sub_type: Array.isArray(filters.prop_sub_type) ? filters.prop_sub_type : [],
   }], { refetchOnWindowFocus: false, });
+
+  if (!user?.email) {
+    return <Loading />
+  }
+
   return (
     <>
       <div className="fixed top-0 left-0 h-full w-1/2 bg-white" aria-hidden="true" />
@@ -160,79 +166,88 @@ const Room: NextPage = () => {
         </Disclosure >
 
         {/* 3 column wrapper */}
-        <div className="mx-auto w-full max-w-7xl flex-grow lg:flex xl:px-8">
-          {/* Left sidebar & main wrapper */}
-          <div className="min-w-0 flex-1 bg-white xl:flex" >
-            <div className="border-b border-gray-200 bg-white xl:w-64 xl:flex-shrink-0 xl:border-b-0 xl:border-r xl:border-gray-200">
-              <FilterForm onSubmit={(values) => {
-                setFilters(values)
-              }} />
-            </div>
-
-            <div className="bg-white lg:min-w-0 lg:flex-1 h-screen overflow-scroll">
-              {isFetching ? <Loading />
-                : <div className="h-full py-6 px-4 sm:px-6 lg:px-8">
-                  {/* Start main area*/}
-                  <div className="relative h-full" style={{ minHeight: '36rem' }}>
-                    <h2 className="text-3xl tracking-wide font-extralight text-gray-600">Available for {searchType === "rent" ? "Rent" : "Sale"} in <span className="font-semibold">{data?.location?.city}, {data?.location?.state_code}</span></h2>
-                    <div className="flex flex-row justify-between">
-                      <p className="mt-2 text-sm text-gray-500"><span className="text-purple-500 font-semibold">{data?.listings.meta.matching_rows?.toLocaleString('en-US')}</span> units avaliable</p>
-                      <p className="mt-2 text-sm text-gray-500">Sort by: <span className="text-purple-500 font-semibold">Relevance</span></p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mt-5">
-                      {data?.listings?.properties?.map(property => {
-                        return (
-                          <Link key={property.property_id} href={`/room/${router.query.id}/property/${property.property_id}`}>
-                            <div className="border h-72 border-gray-300 rounded-lg relative flex flex-col overflow-hidden hover:border-purple-500 cursor-pointer">
-                              <div style={{ backgroundImage: `url('${property.thumbnail}')` }} className="h-full bg-no-repeat bg-cover">
-                              </div>
-                              <div className="h-full pt-3 px-5 flex flex-col justify-between">
-                                <div className="flex flex-row justify-between">
-                                  <p>
-                                    <span className="text-purple-600 font-semibold text-lg">${property.price.toLocaleString("en-US")}</span>
-                                    <span className="text-gray-400 text-xs pl-1 align-middle">{formatDistanceStrict(new Date(property.last_update), new Date(), { addSuffix: true })}</span>
-                                  </p>
-                                  <div className="w-6 h-6 pt-1"><HeartIcon /></div>
-                                </div>
-
-                                <div className="pt-2">
-                                  <p>{property.address.neighborhood_name}</p>
-                                  <p className="text-sm text-gray-500">{property.address.line}, {property.address.city}, {property.address.state_code}</p>
-                                </div>
-
-                                <div className="pt-3 pb-3 flex flex-row justify-between">
-                                  <div className="flex flex-row h-4 text-xs">
-                                    <div className="h-5 w-5 mr-2"><Bed /></div> {property.beds} bd.</div>
-                                  <div className="flex flex-row h-4 text-xs">
-                                    <div className="h-5 w-5 mr-2"><Bath /></div> {property.baths} ba.</div>
-                                  <div className="flex flex-row h-4 text-xs">
-                                    <div className="h-5 w-5 mr-2"><Size /></div> {property.building_size?.size} {property.building_size?.units}</div>
-                                </div>
-                              </div>
-                            </div>
-                          </Link>)
-                      })}
-
-                    </div>
-                  </div>
-                  {/* End main area */}
-                </div>}
-            </div>
-          </div >
-
-          <div className="bg-gray-50 pr-4 sm:pr-6 lg:flex-shrink-0 lg:border-l lg:border-gray-200 lg:pr-8 xl:pr-0">
-            <div className="h-full py-6 pl-6 lg:w-80">
-              {/* Start right column area */}
-              <div className="relative h-full" style={{ minHeight: '16rem' }}>
-                {user?.email &&
-                  <Realtime email={user.email} roomId={router.query.id as string} />
-                }
+        <RealtimeWrapper email={user.email} roomId={router.query.id as string}>
+          <div className="mx-auto w-full max-w-7xl flex-grow lg:flex xl:px-8">
+            <div className="min-w-0 flex-1 bg-white xl:flex" >
+              <div className="border-b border-gray-200 bg-white xl:w-64 xl:flex-shrink-0 xl:border-b-0 xl:border-r xl:border-gray-200">
+                <FilterForm onSubmit={(values) => {
+                  setFilters(values)
+                }} />
               </div>
-              {/* End right column area */}
+
+              <div className="bg-white lg:min-w-0 lg:flex-1 h-screen overflow-scroll">
+                {isFetching ? <Loading />
+                  : <div className="h-full py-6 px-4 sm:px-6 lg:px-8">
+                    {/* Start main area*/}
+                    <div className="relative h-full" style={{ minHeight: '36rem' }}>
+                      <h2 className="text-3xl tracking-wide font-extralight text-gray-600">Available for {searchType === "rent" ? "Rent" : "Sale"} in <span className="font-semibold">{data?.location?.city}, {data?.location?.state_code}</span></h2>
+                      <div className="flex flex-row justify-between">
+                        <p className="mt-2 text-sm text-gray-500"><span className="text-purple-500 font-semibold">{data?.listings.meta.matching_rows?.toLocaleString('en-US')}</span> units avaliable</p>
+                        <p className="mt-2 text-sm text-gray-500">Sort by: <span className="text-purple-500 font-semibold">Relevance</span></p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 mt-5">
+                        {data?.listings?.properties?.map(property => {
+                          return (
+                            <div key={property.property_id} className="relative">
+                              <ShareToChat
+                                image={property.thumbnail as string}
+                                price={property.price}
+                                address={property.address.line}
+                                email={user.email as string}
+                                propertyId={property.property_id}
+                                roomId={router.query.id as string} />
+
+                              <Link href={`/room/${router.query.id}/property/${property.property_id}`}>
+                                <div className="border h-72 border-gray-300 rounded-lg relative flex flex-col overflow-hidden hover:border-purple-500 cursor-pointer">
+                                  <div style={{ backgroundImage: `url('${property.thumbnail}')` }} className="h-full bg-no-repeat bg-cover">
+                                  </div>
+                                  <div className="h-full pt-3 px-5 flex flex-col justify-between">
+                                    <div className="flex flex-row justify-between">
+                                      <p>
+                                        <span className="text-purple-600 font-semibold text-lg">${property.price.toLocaleString("en-US")}</span>
+                                        <span className="text-gray-400 text-xs pl-1 align-middle">{formatDistanceStrict(new Date(property.last_update), new Date(), { addSuffix: true })}</span>
+                                      </p>
+
+                                    </div>
+
+                                    <div className="pt-2">
+                                      <p>{property.address.neighborhood_name}</p>
+                                      <p className="text-sm text-gray-500">{property.address.line}, {property.address.city}, {property.address.state_code}</p>
+                                    </div>
+
+                                    <div className="pt-3 pb-3 flex flex-row justify-between">
+                                      <div className="flex flex-row h-4 text-xs">
+                                        <div className="h-5 w-5 mr-2"><Bed /></div> {property.beds} bd.</div>
+                                      <div className="flex flex-row h-4 text-xs">
+                                        <div className="h-5 w-5 mr-2"><Bath /></div> {property.baths} ba.</div>
+                                      <div className="flex flex-row h-4 text-xs">
+                                        <div className="h-5 w-5 mr-2"><Size /></div> {property.building_size?.size} {property.building_size?.units}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Link> </div>)
+                        })}
+
+                      </div>
+                    </div>
+                    {/* End main area */}
+                  </div>}
+              </div>
+            </div >
+            <div className="bg-gray-50 pr-4 sm:pr-6 lg:flex-shrink-0 lg:border-l lg:border-gray-200 lg:pr-8 xl:pr-0">
+              <div className="h-full py-6 pl-6 lg:w-80">
+                {/* Start right column area */}
+                <div className="relative h-full" style={{ minHeight: '16rem' }}>
+                  {user?.email &&
+                    <Realtime email={user.email} roomId={router.query.id as string} />
+                  }
+                </div>
+                {/* End right column area */}
+              </div>
             </div>
           </div>
-        </div>
+        </RealtimeWrapper>
       </div>
     </>
   )
@@ -478,4 +493,24 @@ const Loading = () => {
     </svg>
     <span className="sr-only">Loading...</span>
   </div>
+}
+
+const ShareToChat = ({ propertyId, roomId, email, address, image, price }: { propertyId: string, roomId: string, email: string, address: string, image: string, price: number }) => {
+  const [feedChannel] = useChannel(`${roomId}:activity`, (message) => { message; })
+
+  const data: FeedMessage = {
+    from: email,
+    payload: {
+      price,
+      type: 'share',
+      propertyId,
+      address,
+      image
+    }
+  }
+
+
+  return <div onClick={() => {
+    feedChannel.publish({ data })
+  }} className="w-6 h-6 pt-2 z-10 absolute right-4  cursor-pointer top-1/2"><ChatBubbleBottomCenterIcon className="hover:text-purple-500" /></div>
 }
