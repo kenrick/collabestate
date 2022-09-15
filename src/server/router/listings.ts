@@ -18,6 +18,11 @@ export const listingRouter = createProtectedRouter()
         price_max: z.string().optional()
       }),
     async resolve({ input }) {
+
+      if (input.input === "") {
+        input.input = "new york"
+      }
+
       const locationResponse = await fetchLocation(input.input)
       const location = locationResponse.autocomplete[0]
 
