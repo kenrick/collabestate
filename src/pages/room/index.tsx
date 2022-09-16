@@ -1,129 +1,48 @@
 import type { NextPage } from "next";
-import { Fragment } from 'react'
-import { Disclosure, Menu, Transition } from '@headlessui/react'
-import classnames from "classnames";
-
 import { CalendarIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { trpc } from "../../utils/trpc";
 import { useRouter } from "next/router";
-import useUser from "../../hooks/useUser";
 import Avatar from "../../components/Avatar";
+import Layout from "../../components/Layout";
+import Loading from "../../components/Loading";
+import { Membership, Room, User } from "@prisma/client";
+import { FC } from "react";
+
+type RoomWithMemberships = Room & {
+  memberships: (Membership & {
+    user: User;
+  })[];
+}
 
 const Rooms: NextPage = () => {
-  const { user } = useUser()
-  const { data: rooms } = trpc.useQuery(["room.getAll"])
+  const { data: rooms, isFetching } = trpc.useQuery(["room.getAll"])
+  const isRoomEmpty = (rooms ?? []).length === 0
+
+  if (isFetching) {
+    return (
+      <Layout splitBackground={false}>
+        <Loading />
+      </Layout>
+    )
+  }
 
   return (
-    <>
-      <div className="fixed top-0 left-0 h-full w-full bg-white" aria-hidden="true" />
-      <div className="relative flex h-screen flex-col">
-        {/* Navbar */}
-        <Disclosure as="nav" className="flex-shrink-0 bg-white border-b ">
-          {() => (
-            <>
-              <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8">
-                <div className="relative flex h-16 items-center justify-between">
-
-                  <div className="flex items-center px-2 lg:px-0 xl:w-64">
-                    <div className="flex-shrink-0">
-                      <h1 className="text-2xl text-center leading-normal font-extrabold text-gray-700">
-                        Collab<span className="text-purple-300">Estate</span>
-                      </h1>
-                    </div>
-                  </div>
-
-                  {/* Links section */}
-                  <div className="lg:w-80">
-                    <div className="flex items-center justify-end">
-                      {/* Profile dropdown */}
-                      <Menu as="div" className="relative ml-4 flex-shrink-0">
-                        <div>
-                          <Menu.Button className="flex rounded-full bg-purple-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-700">
-                            <span className="sr-only">Open user menu</span>
-                            <Avatar className="h-8 w-8 rounded-full" email={user?.email} />
-                          </Menu.Button>
-                        </div>
-                        <Transition
-                          as={Fragment}
-                          enter="transition ease-out duration-100"
-                          enterFrom="transform opacity-0 scale-95"
-                          enterTo="transform opacity-100 scale-100"
-                          leave="transition ease-in duration-75"
-                          leaveFrom="transform opacity-100 scale-100"
-                          leaveTo="transform opacity-0 scale-95"
-                        >
-                          <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            <Menu.Item>
-                              {({ active }) => (
-                                <a
-                                  href="#"
-                                  className={classnames('block px-4 py-2 text-sm text-gray-700', { 'bg-gray-100': active })}
-                                >
-                                  Logout
-                                </a>
-                              )}
-                            </Menu.Item>
-                          </Menu.Items>
-                        </Transition>
-                      </Menu>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </Disclosure>
-
-
-        {(rooms ?? []).length === 0 ? <NoRooms /> :
-          <div className="w-6/12 mx-auto mt-10">
-            <div className="my-5">
-              <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Rooms</h2>
-            </div>
-            <div className="overflow-hidden bg-white shadow sm:rounded-md">
-              <ul role="list" className="divide-y divide-gray-200">
-                {rooms?.map((room) => (
-                  <li key={room.id}>
-                    <a href={`/room/${room.id}`} className="block hover:bg-gray-50">
-                      <div className="flex items-center px-4 py-4 sm:px-6">
-                        <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-                          <div className="truncate">
-                            <div className="flex text-sm">
-                              <p className="truncate font-medium text-purple-600">{room.name}</p>
-                            </div>
-                            <div className="mt-2 flex">
-                              <div className="flex items-center text-sm text-gray-500">
-                                <CalendarIcon className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" aria-hidden="true" />
-                                <p>
-                                  Created on <time dateTime={room.createdAt.toISOString()}>{room.createdAt.toLocaleDateString()}</time>
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                            <div className="flex -space-x-1 overflow-hidden">
-                              {room.memberships.map((membership) => (
-                                <Avatar key={membership.id}
-                                  className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                                  email={membership.user.email}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="ml-5 flex-shrink-0">
-                          <ChevronRightIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                        </div>
-                      </div>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>}
-
-      </div>
-    </>)
+    <Layout splitBackground={false}>
+      {isRoomEmpty ?
+        <NoRooms /> :
+        <div className="w-6/12 mx-auto mt-10">
+          <div className="my-5">
+            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Rooms</h2>
+          </div>
+          <div className="overflow-hidden bg-white shadow sm:rounded-md">
+            <ul role="list" className="divide-y divide-gray-200">
+              {rooms?.map((room) => (
+                <RoomCard key={room.id} room={room} />
+              ))}
+            </ul>
+          </div>
+        </div>}
+    </Layout>)
 }
 
 export default Rooms
@@ -168,4 +87,43 @@ const NoRooms = () => {
       </div>
     </div>
   </div>)
+}
+
+const RoomCard: FC<{ room: RoomWithMemberships }> = ({ room }) => {
+  return (
+    <li>
+      <a href={`/room/${room.id}`} className="block hover:bg-gray-50">
+        <div className="flex items-center px-4 py-4 sm:px-6">
+          <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
+            <div className="truncate">
+              <div className="flex text-sm">
+                <p className="truncate font-medium text-purple-600">{room.name}</p>
+              </div>
+              <div className="mt-2 flex">
+                <div className="flex items-center text-sm text-gray-500">
+                  <CalendarIcon className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" aria-hidden="true" />
+                  <p>
+                    Created on <time dateTime={room.createdAt.toISOString()}>{room.createdAt.toLocaleDateString()}</time>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
+              <div className="flex -space-x-1 overflow-hidden">
+                {room.memberships.map((membership) => (
+                  <Avatar key={membership.id}
+                    className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+                    email={membership.user.email}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="ml-5 flex-shrink-0">
+            <ChevronRightIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+          </div>
+        </div>
+      </a>
+    </li>
+  )
 }
