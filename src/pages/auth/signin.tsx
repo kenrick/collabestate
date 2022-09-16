@@ -2,15 +2,12 @@ import { GetServerSidePropsContext, InferGetServerSidePropsType, NextPage } from
 import { getCsrfToken } from "next-auth/react"
 import React from "react"
 
-
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
   const csrfToken = await getCsrfToken(context)
   return {
     props: { csrfToken },
   }
 }
-
-
 const SignIn: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = ({ csrfToken }) => {
   return (
     <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8" >
