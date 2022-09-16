@@ -41,7 +41,12 @@ export const listingRouter = createProtectedRouter()
         price_max: input.price_max,
       })
 
-      return { listings: { ...listingResponse, properties: listingResponse.properties.filter(p => p.thumbnail) }, location: location }
+      return {
+        listings: {
+          ...listingResponse,
+          properties: listingResponse.properties.filter(p => p.thumbnail)
+        }, location: location
+      }
     },
   }).query("byId", {
     input: z

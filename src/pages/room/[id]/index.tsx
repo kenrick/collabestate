@@ -8,12 +8,13 @@ import { formatDistanceStrict } from "date-fns";
 import { RadioGroup } from '@headlessui/react'
 import classNames from "classnames";
 import { Controller, useForm } from "react-hook-form";
-import { useRouter } from "next/router";
 import { FeedMessage } from "../../../components/Realtime";
 import { useChannel } from "@ably-labs/react-hooks";
 import Loading from "../../../components/Loading";
 import { BedIcon, BathIcon, SizeIcon } from "../../../components/Icons";
 import FeedLayout from "../../../components/FeedLayout";
+import { Property } from "../../../server/common/realtor";
+import { useRouter } from "next/router";
 
 type SearchType = "sale" | "rent"
 const roomOptions = ["1", "2", "3", "4", "5"]
@@ -28,8 +29,8 @@ interface FilterValues {
 }
 
 const Room: NextPage = () => {
-  const router = useRouter()
   const { user } = useUser()
+  const router = useRouter()
   const [searchType, setSearchType] = useState<SearchType>('sale')
   const [searchText, setSearchText] = useState('')
   const [filters, setFilters] = useState<FilterValues>({})
@@ -73,48 +74,14 @@ const Room: NextPage = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mt-5">
-                  {data?.listings?.properties?.map(property => {
-                    return (
-                      <div key={property.property_id} className="relative">
-                        <ShareToChat
-                          image={property.thumbnail as string}
-                          price={property.price}
-                          address={property.address.line}
-                          email={user?.email as string}
-                          propertyId={property.property_id}
-                          roomId={router.query.id as string} />
-
-                        <Link href={`/room/${router.query.id}/property/${property.property_id}`}>
-                          <div className="border h-72 border-gray-300 rounded-lg relative flex flex-col overflow-hidden hover:border-purple-500 cursor-pointer">
-                            <div style={{ backgroundImage: `url('${property.thumbnail}')` }} className="h-full bg-no-repeat bg-cover">
-                            </div>
-                            <div className="h-full pt-3 px-5 flex flex-col justify-between">
-                              <div className="flex flex-row justify-between">
-                                <p>
-                                  <span className="text-purple-600 font-semibold text-lg">${property.price.toLocaleString("en-US")}</span>
-                                  <span className="text-gray-400 text-xs pl-1 align-middle">{formatDistanceStrict(new Date(property.last_update), new Date(), { addSuffix: true })}</span>
-                                </p>
-
-                              </div>
-
-                              <div className="pt-2">
-                                <p>{property.address.neighborhood_name}</p>
-                                <p className="text-sm text-gray-500">{property.address.line}, {property.address.city}, {property.address.state_code}</p>
-                              </div>
-
-                              <div className="pt-3 pb-3 flex flex-row justify-between">
-                                <div className="flex flex-row h-4 text-xs">
-                                  <div className="h-5 w-5 mr-2"><BedIcon /></div> {property.beds} bd.</div>
-                                <div className="flex flex-row h-4 text-xs">
-                                  <div className="h-5 w-5 mr-2"><BathIcon /></div> {property.baths} ba.</div>
-                                <div className="flex flex-row h-4 text-xs">
-                                  <div className="h-5 w-5 mr-2"><SizeIcon /></div> {property.building_size?.size} {property.building_size?.units}</div>
-                              </div>
-                            </div>
-                          </div>
-                        </Link> </div>)
-                  })}
-
+                  {data?.listings?.properties?.map(property =>
+                    <PropertyCard
+                      key={property.property_id}
+                      property={property}
+                      email={user?.email as string}
+                      roomId={router.query.id as string}
+                    />
+                  )}
                 </div>
               </div>
               {/* End main area */}
@@ -310,7 +277,48 @@ const FilterForm = ({ onSubmit }: { onSubmit: (values: FilterValues) => void }) 
 
 }
 
+const PropertyCard: FC<{ property: Property, roomId: string, email: string }> = ({ property, email, roomId }) => {
+  return (<div className="relative" >
+    <ShareToChat
+      image={property.thumbnail as string}
+      price={property.price}
+      address={property.address.line}
+      email={email}
+      propertyId={property.property_id}
+      roomId={roomId} />
 
+    <Link href={`/room/${roomId}/property/${property.property_id}`}>
+      <div className="border h-72 border-gray-300 rounded-lg relative flex flex-col overflow-hidden hover:border-purple-500 cursor-pointer">
+        <div style={{ backgroundImage: `url('${property.thumbnail}')` }} className="h-full bg-no-repeat bg-cover">
+        </div>
+        <div className="h-full pt-3 px-5 flex flex-col justify-between">
+          <div className="flex flex-row justify-between">
+            <p>
+              <span className="text-purple-600 font-semibold text-lg">${property.price.toLocaleString("en-US")}</span>
+              <span className="text-gray-400 text-xs pl-1 align-middle">{formatDistanceStrict(new Date(property.last_update), new Date(), { addSuffix: true })}</span>
+            </p>
+
+          </div>
+
+          <div className="pt-2">
+            <p>{property.address.neighborhood_name}</p>
+            <p className="text-sm text-gray-500">{property.address.line}, {property.address.city}, {property.address.state_code}</p>
+          </div>
+
+          <div className="pt-3 pb-3 flex flex-row justify-between">
+            <div className="flex flex-row h-4 text-xs">
+              <div className="h-5 w-5 mr-2"><BedIcon /></div> {property.beds} bd.</div>
+            <div className="flex flex-row h-4 text-xs">
+              <div className="h-5 w-5 mr-2"><BathIcon /></div> {property.baths} ba.</div>
+            <div className="flex flex-row h-4 text-xs">
+              <div className="h-5 w-5 mr-2"><SizeIcon /></div> {property.building_size?.size} {property.building_size?.units}</div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  </div>
+  )
+}
 
 const ShareToChat = ({ propertyId, roomId, email, address, image, price }: { propertyId: string, roomId: string, email: string, address: string, image: string, price: number }) => {
   const [feedChannel] = useChannel(`${roomId}:activity`, (message) => { message; })
