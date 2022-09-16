@@ -5,6 +5,7 @@ import Avatar from "./Avatar";
 import { Transition } from '@headlessui/react'
 import Link from "next/link.js";
 import { useRouter } from "next/router.js";
+import Loading from "./Loading";
 
 export const RealtimeWrapper = ({ email, children }: { email: string, roomId: string, children: JSX.Element }) => {
   const sdk = useRef(null)
@@ -16,8 +17,7 @@ export const RealtimeWrapper = ({ email, children }: { email: string, roomId: st
     return children
   }
 
-  return null
-
+  return <Loading />
 }
 
 const RealTimeWindow = ({ email, roomId }: { email: string, roomId: string }) => {
